@@ -61,4 +61,14 @@ impl Map {
             }
         }
     }
+    pub fn get_player_position(&self) -> (usize, usize) {
+        for y in 0..self.height {
+            for x in 0..self.width {
+                if self.tiles[y][x] == '🧍' {
+                    return (x, y);
+                }
+            }
+        }
+        panic!("Player not found!");
+    }
 }

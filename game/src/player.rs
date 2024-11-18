@@ -22,10 +22,12 @@ impl Player {
             defense: 5,
         }
     }
+    
 }
 
 impl Default for Player {
     fn default() -> Self {
         Player::new("Unknown")
     }
+
 }
