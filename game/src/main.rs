@@ -29,8 +29,7 @@ fn main() {
     });
 
     let mut input = String::new();
-    //effacer l'ecran
-    print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+    print!("{esc}[2J{esc}[1;1H", esc = 27 as char);//effacer l'ecran
     println!("Bienvenue dans le Mini-RPG!");
     println!("Entrez votre nom:");
     io::stdout().flush().unwrap();
@@ -46,6 +45,10 @@ fn main() {
         {
             let  game = game.lock().unwrap();
             game.display();
+
+            if game.state == GameState::Combat {
+                continue;
+            }
 
             if game.state == GameState::GameOver {
                 println!("Game Over! Score final: {}", game.score);
