@@ -34,15 +34,15 @@ impl Map {
             println!();
         }
     }
-//emoji for walls
+
     pub fn is_valid_move(&self, x: usize, y: usize) -> bool {
         x < self.width && y < self.height && self.tiles[y][x] != '⬜'
     }
-//emoji for player
+
     pub fn place_player(&mut self, x: usize, y: usize) {
         self.tiles[y][x] = '🧍';
     }
-//emogi for monster
+
     pub fn place_monster(&mut self, x: usize, y: usize) {
         self.tiles[y][x] = '👾';
     }
@@ -60,15 +60,5 @@ impl Map {
                 return (x, y);
             }
         }
-    }
-    pub fn get_player_position(&self) -> (usize, usize) {
-        for y in 0..self.height {
-            for x in 0..self.width {
-                if self.tiles[y][x] == '🧍' {
-                    return (x, y);
-                }
-            }
-        }
-        panic!("Player not found!");
     }
 }
