@@ -1,5 +1,5 @@
 use rand::Rng;
-
+use crate::player::{Player, Espece};
 pub struct Map {
     width: usize,
     height: usize,
@@ -40,7 +40,16 @@ impl Map {
     }
 
     pub fn place_player(&mut self, x: usize, y: usize) {
-        self.tiles[y][x] = '🧍';
+        // choisir le bon caractère pour le joueur
+        if players.espece == Espece::Homme {
+            self.tiles[y][x] = '🧑';
+        } else if players.espece == Espece::Sorciere {
+            self.tiles[y][x] = '🧙';
+        } else if players.espece == Espece::Elfe {
+            self.tiles[y][x] = '🧚';
+        } else if players.espece == Espece::Chevalier {
+            self.tiles[y][x] = '🧝';
+        }
     }
 
     pub fn place_monster(&mut self, x: usize, y: usize) {

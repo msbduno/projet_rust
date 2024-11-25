@@ -44,14 +44,14 @@ impl Game {
         }
     }
 
-    pub fn initialize_player(&mut self, name: &str) {
-        self.player = Player::new(name);
+    pub fn initialize_player(&mut self, name: &str, espece: Espece) {
+        self.player = Player::new_with_class(name, espece);
         self.map.place_player(0, 0);
     }
 
     pub fn spawn_random_monster(&mut self) {
         let mut rng = rand::thread_rng();
-        if self.monsters.len() < 5 {  // Limit number of monsters
+        if self.monsters.len() < 10 {  // Limit number of monsters
             let (x, y) = self.map.get_random_empty_position();
             let mut monster = Monster::new(x, y);
             self.map.place_monster(x, y);
@@ -86,65 +86,174 @@ impl Game {
     pub fn start_combat(&mut self, monster_idx: usize) {
         self.state = GameState::Combat;
         self.current_monster_index = Some(monster_idx);
-        println!("Combat contre un {} niveau {}!", 
-            match self.monsters[monster_idx].species {
-                MonsterSpecies::Goblin => "Gobelin",
-                MonsterSpecies::Orc => "Orc",
-                MonsterSpecies::Skeleton => "Squelette",
-                MonsterSpecies::Dragon => "Dragon",
-            }, 
+        
+        // Effacer l'écran
+        print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+        
+        let monster_name = match self.monsters[monster_idx].species {
+            MonsterSpecies::Goblin => "Gobelin",
+            MonsterSpecies::Orc => "Orc",
+            MonsterSpecies::Skeleton => "Squelette",
+            MonsterSpecies::Dragon => "Dragon",
+        };
+        
+        // Afficher l'introduction du combat avec une pause
+        println!("\n⚔️  Un {} niveau {} vous attaque!", 
+            monster_name,
             self.monsters[monster_idx].level
         );
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        
+        // Afficher les statistiques initiales
+        println!("\n=== DÉBUT DU COMBAT ===");
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        
+        println!("\n👤 {}", self.player.name);
+        println!("❤️  Points de vie: {}/{}", self.player.points_de_vie, self.player.max_health);
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        
+        println!("\n👾 {}", monster_name);
+        println!("❤️  Points de vie: {}/{}", 
+            self.monsters[monster_idx].health,
+            self.monsters[monster_idx].max_health
+        );
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        
+        println!("\nPréparez-vous au combat!");
+        
+        // Pause finale pour s'assurer que tout est lisible
+        std::thread::sleep(std::time::Duration::from_secs(5));
     }
 
     pub fn combat_turn(&mut self, player_action: PlayerCombatAction) {
         if self.state != GameState::Combat || self.current_monster_index.is_none() {
             return;
         }
-
+    
         let monster_idx = self.current_monster_index.unwrap();
         let monster = &mut self.monsters[monster_idx];
+    
+        // Fonction helper pour faire une pause
+        fn combat_pause() {
+            std::thread::sleep(std::time::Duration::from_secs(1));
+        }
 
+    
         // Player's turn
+        println!("\n🗡️  Tour de {} !", self.player.name);
+        combat_pause();
+    
         match player_action {
             PlayerCombatAction::Attack => {
                 let damage = self.player.attack(monster);
+                println!("➜ {} prépare son attaque...", self.player.name);
+                combat_pause();
+                
                 monster.receive_damage(damage);
+                println!("➜ {} frappe et inflige {} points de dégâts au {} !", 
+                    self.player.name, 
+                    damage,
+                    match monster.species {
+                        MonsterSpecies::Goblin => "Gobelin",
+                        MonsterSpecies::Orc => "Orc",
+                        MonsterSpecies::Skeleton => "Squelette",
+                        MonsterSpecies::Dragon => "Dragon",
+                    }
+                );
+                combat_pause();
+                
+                println!("PV restants du monstre: {}", monster.health);
+                combat_pause();
             },
             PlayerCombatAction::SpecialAttack => {
                 if self.player.attaque_speciale {
+                    println!("➜ {} prépare une attaque spéciale...", self.player.name);
+                    combat_pause();
+                    
                     let damage = self.player.use_special_attack(monster);
-                    monster.receive_damage(damage);
+                    println!("➜ {} déchaîne sa puissance et inflige {} points de dégâts !", 
+                        self.player.name, 
+                        damage
+                    );
+                    combat_pause();
+                    
+                    println!("PV restants du monstre: {}", monster.health);
+                    combat_pause();
                 } else {
-                    println!("Attaque spéciale non disponible!");
+                    println!("❌ Attaque spéciale non disponible!");
+                    combat_pause();
+                    return;
                 }
             },
             PlayerCombatAction::Drink => {
+                let old_hp = self.player.points_de_vie;
+                println!("➜ {} sort une potion...", self.player.name);
+                combat_pause();
+                
                 self.player.drink_potion();
+                if self.player.points_de_vie > old_hp {
+                    println!("➜ {} boit la potion et récupère {} points de vie!", 
+                        self.player.name,
+                        self.player.points_de_vie - old_hp
+                    );
+                    combat_pause();
+                    
+                    println!("Nouveaux PV: {}", self.player.points_de_vie);
+                    combat_pause();
+                }
             }
         }
-
+    
         // Monster's turn if still alive
         if monster.is_alive() {
+            println!("\n👾 Tour du monstre:");
+            combat_pause();
+            
             let mut rng = rand::thread_rng();
             let monster_action: i32 = rng.gen_range(0..10);
-
+    
+            let monster_name = match monster.species {
+                MonsterSpecies::Goblin => "Gobelin",
+                MonsterSpecies::Orc => "Orc",
+                MonsterSpecies::Skeleton => "Squelette",
+                MonsterSpecies::Dragon => "Dragon",
+            };
+    
+            println!("➜ Le {} se prépare à attaquer...", monster_name);
+            combat_pause();
+    
             let monster_damage = if monster_action < 2 && monster.special_attack_available {
                 monster.special_attack()
             } else {
-                monster.attack(self.player.defense)
+                let damage = monster.attack(self.player.defense);
+                println!("➜ Le {} attaque et inflige {} points de dégâts!", 
+                    monster_name,
+                    damage
+                );
+                damage
             };
-
+            combat_pause();
+    
             self.player.receive_damage(monster_damage);
+            println!("PV restants de {}: {}", self.player.name, self.player.points_de_vie);
+            combat_pause();
         }
-
+    
         // Check combat end conditions
         if !monster.is_alive() {
+            println!("\n💫 Victoire!");
+            combat_pause();
+            println!("➜ +{} points d'expérience", monster.level * 10);
+            combat_pause();
             self.end_combat(monster_idx);
         } else if self.player.points_de_vie <= 0 {
+            println!("\n💀 Vous avez été vaincu!");
+            combat_pause();
             self.state = GameState::GameOver;
-            println!("Vous avez été vaincu!");
         }
+    
+        // Final pause before next turn
+        combat_pause();
     }
 
     fn end_combat(&mut self, monster_idx: usize) {
@@ -163,9 +272,7 @@ impl Game {
     }
 
     pub fn display(&self) {
-        println!("Nom: {} (Niveau {})", self.player.name, self.player.level);
-        println!("Points de vie: {}/{}", self.player.points_de_vie, self.player.max_health);
-        println!("Potions: {}", self.player.potions);
+        println!("Joueur: {} (Niveau {})", self.player.name, self.player.level);
         println!("Score: {}", self.score);
         
         if let Some(monster_idx) = self.current_monster_index {
@@ -179,10 +286,14 @@ impl Game {
                 },
                 monster.level
             );
-            println!("Points de vie du monstre: {}", monster.health);
+            println!();
+            println!("Monstre -> Points de vie {}/{}", monster.health, monster.max_health);
+            println!("{} -> Points de vie {}/{}", self.player.name, self.player.points_de_vie, self.player.max_health);
+            println!();
+            
         }
         
-        println!("\nCarte:");
+    
         self.map.display();
     }
 
@@ -191,7 +302,7 @@ impl Game {
         println!("Points de vie: {}/{}", self.player.points_de_vie, self.player.max_health);
         println!("Potions: {}", self.player.potions);
         println!("Espèce: {}", match self.player.espece {
-            Espece::Nain => "Nain",
+            Espece::Homme => "Hommme",
             Espece::Sorciere => "Sorcière",
             Espece::Elfe => "Elfe",
             Espece::Chevalier => "Chevalier",

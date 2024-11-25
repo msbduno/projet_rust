@@ -3,7 +3,7 @@ use crate::monster::Monster;
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum Espece {
-    Nain,
+    Homme,
     Sorciere,
     Elfe,
     Chevalier,
@@ -31,18 +31,41 @@ impl Default for Player {
 
 impl Player {
 
+    pub fn new_with_class(name: &str, espece: Espece) -> Self {
+        let (base_health, base_attack, base_defense) = match espece {
+            Espece::Homme => (120, 25, 10),
+            Espece::Sorciere => (80, 22, 5),
+            Espece::Elfe => (100, 28, 7),
+            Espece::Chevalier => (150, 26, 12),
+        };
+    
+        Player {
+            name: name.to_string(),
+            x: 0,
+            y: 0,
+            points_de_vie: base_health,
+            max_health: base_health,
+            level: 1,
+            attack: base_attack,
+            defense: base_defense,
+            espece,
+            attaque_speciale: true,
+            potions: 3,
+        }
+    }
+
 
     pub fn new(name: &str) -> Self {
         let mut rng = rand::thread_rng();
         let espece = match rng.gen_range(0..4) {
-            0 => Espece::Nain,
+            0 => Espece::Homme,
             1 => Espece::Sorciere,
             2 => Espece::Elfe,
             _ => Espece::Chevalier,
         };
 
         let (base_health, base_attack, base_defense) = match espece {
-            Espece::Nain => (120, 15, 10),
+            Espece::Homme => (120, 15, 10),
             Espece::Sorciere => (80, 12, 5),
             Espece::Elfe => (100, 18, 7),
             Espece::Chevalier => (150, 16, 12),
@@ -74,8 +97,6 @@ impl Player {
         } else {
             base_damage
         };
-
-        println!("{} attaque et inflige {} dégâts!", self.name, damage);
         damage
     }
 
@@ -87,24 +108,22 @@ impl Player {
 
         self.attaque_speciale = false;
         match self.espece {
-            Espece::Nain => {
-                println!("{} (nain) effectue une attaque spéciale!", self.name);
+            Espece::Homme => {
                 monster.receive_damage(self.attack * 2);
                 self.attack * 2
             },
             Espece::Sorciere => {
-                println!("{} (sorcière) effectue une attaque spéciale!", self.name);
                 let damage = self.attack;
                 self.points_de_vie = std::cmp::min(self.points_de_vie + 20, self.max_health);
                 damage
             },
             Espece::Elfe => {
-                println!("{} (elfe) effectue une attaque spéciale!", self.name);
+        
                 self.attack *= 2;
                 self.attack
             },
             Espece::Chevalier => {
-                println!("{} (chevalier) effectue une attaque spéciale!", self.name);
+                
                 self.points_de_vie = std::cmp::min(self.points_de_vie + 10, self.max_health);
                 self.attack * 2
             },
@@ -113,7 +132,7 @@ impl Player {
 
     pub fn receive_damage(&mut self, damage: i32) {
         self.points_de_vie = std::cmp::max(0, self.points_de_vie - damage);
-        println!("{} reçoit {} points de dégâts!", self.name, damage);
+        
     }
 
     pub fn drink_potion(&mut self) {
