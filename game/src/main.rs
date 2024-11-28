@@ -17,7 +17,7 @@ use game::{Game, GameState, PlayerCombatAction};
 use player::Espece;
 
 fn select_character() -> (String, Espece) {
-    let mut stdout = std::io::stdout();
+   
     let mut input = String::new();
 
     // Get player name
@@ -35,8 +35,8 @@ fn select_character() -> (String, Espece) {
 
 
 
-    println!("Choisissez votre classe:");
-    println!("1. Homme 🚶");
+    println!("Choisissez votre perso:");
+    println!("1. Homme 🧑");
     println!("   Force brute et résistance exceptionnelle");
     println!("   PV: 120, Attaque: 15, Défense: 10");
     println!();
@@ -105,12 +105,25 @@ fn main() -> crossterm::Result<()> {
             let game = game.lock().unwrap();
             print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
 
-            game.display();
+            game.display();   
+            
+            
+            if game.state == GameState::Win {
+                //clear screen
+                print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+                println!();
+                println!("🏆 FÉLICITATIONS ! Vous avez atteint le niveau 5 et remporté le jeu avce le score {}!", game.score);
+                
+            }
 
             if game.state == GameState::GameOver {
-                println!("Game Over! Score final: {}", game.score);
+                print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+                println!();
+                println!("Game Over! Score final: {}, Niveau atteint : {}", game.score , game.player.level);
                 break;
             }
+
+         
 
             match game.state {
                 GameState::Running => {
@@ -120,9 +133,11 @@ fn main() -> crossterm::Result<()> {
                     println!("\nCommandes de combat: (a)ttaque (s)péciale (p)otion (x)quitter");
                 },
                 GameState::GameOver => break,
+                GameState::Win => break,
             }
         }
-       
+
+      
         if let Event::Key(key_event) = event::read()? {
             let mut game = game.lock().unwrap();
             match game.state {
@@ -149,11 +164,18 @@ fn main() -> crossterm::Result<()> {
                         KeyCode::Char('a') => game.combat_turn(PlayerCombatAction::Attack),
                         KeyCode::Char('s') => game.combat_turn(PlayerCombatAction::SpecialAttack),
                         KeyCode::Char('p') => game.combat_turn(PlayerCombatAction::Drink),
+                        KeyCode::Char('h') => {
+                            game.show_help();
+                            std::thread::sleep(std::time::Duration::from_secs(2));
+                        },
                         KeyCode::Char('x') => break,
                         _ => {}
                     }
                 },
+
+
                 GameState::GameOver => break,
+                GameState::Win => break,
             }
         }
     }

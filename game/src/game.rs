@@ -8,6 +8,7 @@ pub enum GameState {
     Running,
     Combat,
     GameOver,
+    Win,
 }
 
 #[derive(PartialEq)]
@@ -46,14 +47,14 @@ impl Game {
 
     pub fn initialize_player(&mut self, name: &str, espece: Espece) {
         self.player = Player::new_with_class(name, espece);
-        self.map.place_player(0, 0);
+        self.map.place_player(0, 0, &self.player);
     }
 
     pub fn spawn_random_monster(&mut self) {
-        let mut rng = rand::thread_rng();
+        let mut _rng = rand::thread_rng();
         if self.monsters.len() < 10 {  // Limit number of monsters
             let (x, y) = self.map.get_random_empty_position();
-            let mut monster = Monster::new(x, y);
+            let  monster = Monster::new(x, y);
             self.map.place_monster(x, y);
             self.monsters.push(monster);
         }
@@ -67,19 +68,45 @@ impl Game {
         if self.state == GameState::Combat {
             return;
         }
-
+    
         let new_x = (self.player.x as i32 + dx) as usize;
         let new_y = (self.player.y as i32 + dy) as usize;
-
+    
         if self.state == GameState::Running && self.map.is_valid_move(new_x, new_y) {
             self.map.clear_position(self.player.x, self.player.y);
             self.player.x = new_x;
             self.player.y = new_y;
-            self.map.place_player(new_x, new_y);
-
+            self.map.place_player(new_x, new_y, &self.player);
+    
+            // Check for special icons
+            if self.map.is_health_icon(new_x, new_y) {
+                self.player.points_de_vie = std::cmp::min(
+                    self.player.points_de_vie + 10, 
+                    self.player.max_health
+                );
+                self.map.clear_special_icon(new_x, new_y);
+                println!("❤️ Vous récupérez 10 points de vie!");
+            }
+    
+            if self.map.is_damage_icon(new_x, new_y) {
+                self.player.points_de_vie -= 50;
+                self.map.clear_special_icon(new_x, new_y);
+                println!("🔥 Vous subissez 50 points de dégâts!");
+    
+                // Check if player dies
+                if self.player.points_de_vie <= 0 {
+                    self.state = GameState::GameOver;
+                }
+            }
+    
             if let Some(monster_idx) = self.find_monster_at(new_x, new_y) {
                 self.start_combat(monster_idx);
             }
+        }
+    
+        // Existing door check remains the same
+        if self.map.is_on_door(self.player.x, self.player.y) {
+            self.generate_new_map();
         }
     }
 
@@ -107,8 +134,17 @@ impl Game {
         // Afficher les statistiques initiales
         println!("\n=== DÉBUT DU COMBAT ===");
         std::thread::sleep(std::time::Duration::from_millis(500));
-        
-        println!("\n👤 {}", self.player.name);
+        let mut icon = ' ';
+        if self.player.espece == Espece::Homme {
+            icon = '🧑';
+        } else if self.player.espece  == Espece::Sorciere {
+            icon = '🧙';
+        } else if self.player.espece  == Espece::Elfe {
+            icon  = '🧚';
+        } else if self.player.espece  == Espece::Chevalier {
+            icon = '🧝';
+        }
+        println!("\n {} {}", icon, self.player.name);
         println!("❤️  Points de vie: {}/{}", self.player.points_de_vie, self.player.max_health);
         std::thread::sleep(std::time::Duration::from_millis(500));
         
@@ -260,8 +296,6 @@ impl Game {
         println!("Victoire! +{} points", self.monsters[monster_idx].level * 10);
         self.score += self.monsters[monster_idx].level * 10;
         
-        // Level up player
-        self.player.level_up();
         
         // Remove monster from map and list
         let monster = self.monsters.remove(monster_idx);
@@ -307,7 +341,7 @@ impl Game {
             Espece::Elfe => "Elfe",
             Espece::Chevalier => "Chevalier",
         });
-        println!("Niveau d'attaque: {}", self.player.attack);
+        println!("Attaque: {}", self.player.attack);
         println!("Défense: {}", self.player.defense);
     }
 
@@ -326,4 +360,44 @@ impl Game {
         println!("s: Attaque spéciale");
         println!("p: Boire une potion");
     }
+    // generate a new map if the player is on a door tile 
+
+
+    pub fn generate_new_map(&mut self) {
+        self.player.level_up();
+        
+        // Clear screen
+        print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+        
+        // Display level up message with benefits
+        println!("\n🆙 PASSAGE AU NIVEAU {} 🆙", self.player.level);
+        println!(" ");
+        println!("• Points de vie max augmentés");
+        println!("• Attaque améliorée");
+        println!("• Défense renforcée");
+        println!("• Attaque spéciale réinitialisée");
+        println!("• Une nouvelle potion ajoutée");
+        
+        // Pause to let the player read the message
+        std::thread::sleep(std::time::Duration::from_secs(3));
+    
+        // Check if the game is won
+        if self.player.level == 5 {
+            self.state = GameState::Win;
+        } else {
+            // Generate a new map with the same size
+            self.map = Map::new(10, 10);
+        
+            // Place the player at the starting position
+            self.map.place_player(0, 0, &self.player);
+            self.player.x = 0;
+            self.player.y = 0;
+        
+            // Reset monsters
+            self.monsters.clear();
+            self.spawn_random_monster();
+        }
+    }
+
+    
 }

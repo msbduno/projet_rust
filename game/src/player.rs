@@ -154,5 +154,7 @@ impl Player {
         self.attaque_speciale = true;
         self.potions += 1;
         println!("{} monte au niveau {} !", self.name, self.level);
+
+    
     }
 }
