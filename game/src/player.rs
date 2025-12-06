@@ -92,7 +92,7 @@ impl Player {
         let critical_chance: i32 = rng.gen_range(0..10);
         
         let damage = if critical_chance == 0 {
-            println!("Coup critique de {}!", self.name);
+            print!("Coup critique de {}!\r\n", self.name);
             base_damage * 2
         } else {
             base_damage
@@ -102,7 +102,7 @@ impl Player {
 
     pub fn use_special_attack(&mut self, monster: &mut Monster) -> i32 {
         if !self.attaque_speciale {
-            println!("Attaque spéciale non disponible!");
+            print!("Attaque spéciale non disponible!\r\n");
             return self.attack;
         }
 
@@ -139,9 +139,9 @@ impl Player {
         if self.potions > 0 {
             self.points_de_vie = std::cmp::min(self.points_de_vie + 30, self.max_health);
             self.potions -= 1;
-            println!("{} boit une potion et récupère 30 points de vie!", self.name);
+            print!("{} boit une potion et récupère 30 points de vie!\r\n", self.name);
         } else {
-            println!("{} n'a plus de potions!", self.name);
+            print!("{} n'a plus de potions!\r\n", self.name);
         }
     }
 
@@ -153,7 +153,7 @@ impl Player {
         self.defense += 3;
         self.attaque_speciale = true;
         self.potions += 1;
-        println!("{} monte au niveau {} !", self.name, self.level);
+        print!("{} monte au niveau {} !\r\n", self.name, self.level);
 
     
     }

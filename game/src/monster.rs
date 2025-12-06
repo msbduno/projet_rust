@@ -57,7 +57,7 @@ impl Monster {
         let critical_chance: i32 = rng.gen_range(0..10);
         
         if critical_chance == 0 {
-            println!("Coup critique!");
+            print!("Coup critique!\r\n");
             damage * 2
         } else {
             damage
@@ -72,19 +72,19 @@ impl Monster {
         self.special_attack_available = false;
         match self.species {
             MonsterSpecies::Goblin => {
-                println!("Le Gobelin effectue une attaque fourbe!");
+                print!("Le Gobelin effectue une attaque fourbe!\r\n");
                 self.attack * 2
             },
             MonsterSpecies::Orc => {
-                println!("L'Orc pousse un cri de guerre!");
+                print!("L'Orc pousse un cri de guerre!\r\n");
                 self.attack * 3 / 2
             },
             MonsterSpecies::Skeleton => {
-                println!("Le Squelette lance une attaque spectrale!");
+                print!("Le Squelette lance une attaque spectrale!\r\n");
                 self.attack * 2
             },
             MonsterSpecies::Dragon => {
-                println!("Le Dragon crache des flammes!");
+                print!("Le Dragon crache des flammes!\r\n");
                 self.attack * 3
             },
         }

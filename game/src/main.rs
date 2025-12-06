@@ -4,8 +4,7 @@ use std::time::Duration;
 
 use crossterm::{
     event::{self, Event, KeyCode},
-    terminal::{self, ClearType},
-    ExecutableCommand,
+    terminal::{self},
 };
 
 mod game;
@@ -94,27 +93,30 @@ fn main() -> crossterm::Result<()> {
     // Activation du mode brut pour les déplacements
     terminal::enable_raw_mode()?;
     loop {
-        let mut stdout = std::io::stdout();
-        stdout.execute(terminal::Clear(ClearType::All))?;
         {
             let game = game.lock().unwrap();
-            print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+            
+            // Clear screen properly
+            print!("\x1B[2J\x1B[1;1H");
+            std::io::Write::flush(&mut std::io::stdout()).unwrap();
 
             game.display();   
             
             
             if game.state == GameState::Win {
                 //clear screen
-                print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
-                println!();
-                println!("🏆 FÉLICITATIONS ! Vous avez atteint le niveau 5 et remporté le jeu avce le score {}!", game.score);
+                print!("\x1B[2J\x1B[1;1H");
+                std::io::Write::flush(&mut std::io::stdout()).unwrap();
+                print!("\r\n");
+                print!("🏆 FÉLICITATIONS ! Vous avez atteint le niveau 5 et remporté le jeu avce le score {}!\r\n", game.score);
                 
             }
 
             if game.state == GameState::GameOver {
-                print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
-                println!();
-                println!("Game Over! Score final: {}, Niveau atteint : {}", game.score , game.player.level);
+                print!("\x1B[2J\x1B[1;1H");
+                std::io::Write::flush(&mut std::io::stdout()).unwrap();
+                print!("\r\n");
+                print!("Game Over! Score final: {}, Niveau atteint : {}\r\n", game.score , game.player.level);
                 break;
             }
 
@@ -122,10 +124,10 @@ fn main() -> crossterm::Result<()> {
 
             match game.state {
                 GameState::Running => {
-                    println!("\nCommandes: (z)haut (s)bas (q)gauche (d)droite (i)inventaire (h)aide (x)quitter");
+                    print!("\r\nCommandes: (z)haut (s)bas (q)gauche (d)droite (i)inventaire (h)aide (x)quitter\r\n");
                 },
                 GameState::Combat => {
-                    println!("\nCommandes de combat: (a)ttaque (s)péciale (p)otion (x)quitter");
+                    print!("\r\nCommandes de combat: (a)ttaque (s)péciale (p)otion (x)quitter\r\n");
                 },
                 GameState::GameOver => break,
                 GameState::Win => break,

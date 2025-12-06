@@ -63,10 +63,11 @@ impl Map {
     }
 
     pub fn display(&self) {
-        
         for row in &self.tiles {
-            let row_string: String = row.iter().map(|&tile| tile.to_string() + " ").collect();
-            println!("{}", row_string.trim());
+            for &tile in row.iter() {
+                print!("{}", tile);
+            }
+            print!("\r\n"); // Explicit carriage return + newline
         }
     }
 

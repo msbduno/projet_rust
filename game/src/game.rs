@@ -85,13 +85,13 @@ impl Game {
                     self.player.max_health
                 );
                 self.map.clear_special_icon(new_x, new_y);
-                println!("❤️ Vous récupérez 10 points de vie!");
+                print!("❤️ Vous récupérez 10 points de vie!\r\n");
             }
     
             if self.map.is_damage_icon(new_x, new_y) {
                 self.player.points_de_vie -= 50;
                 self.map.clear_special_icon(new_x, new_y);
-                println!("🔥 Vous subissez 50 points de dégâts!");
+                print!("🔥 Vous subissez 50 points de dégâts!\r\n");
     
                 // Check if player dies
                 if self.player.points_de_vie <= 0 {
@@ -125,14 +125,14 @@ impl Game {
         };
         
         // Afficher l'introduction du combat avec une pause
-        println!("\n⚔️  Un {} niveau {} vous attaque!", 
+        print!("\r\n⚔️  Un {} niveau {} vous attaque!\r\n", 
             monster_name,
             self.monsters[monster_idx].level
         );
         std::thread::sleep(std::time::Duration::from_secs(1));
         
         // Afficher les statistiques initiales
-        println!("\n=== DÉBUT DU COMBAT ===");
+        print!("\r\n=== DÉBUT DU COMBAT ===\r\n");
         std::thread::sleep(std::time::Duration::from_millis(500));
         let mut icon = ' ';
         if self.player.espece == Espece::Homme {
@@ -144,18 +144,18 @@ impl Game {
         } else if self.player.espece  == Espece::Chevalier {
             icon = '🧝';
         }
-        println!("\n {} {}", icon, self.player.name);
-        println!("❤️  Points de vie: {}/{}", self.player.points_de_vie, self.player.max_health);
+        print!("\r\n {} {}\r\n", icon, self.player.name);
+        print!("❤️  Points de vie: {}/{}\r\n", self.player.points_de_vie, self.player.max_health);
         std::thread::sleep(std::time::Duration::from_millis(500));
         
-        println!("\n👾 {}", monster_name);
-        println!("❤️  Points de vie: {}/{}", 
+        print!("\r\n👾 {}\r\n", monster_name);
+        print!("❤️  Points de vie: {}/{}\r\n", 
             self.monsters[monster_idx].health,
             self.monsters[monster_idx].max_health
         );
         std::thread::sleep(std::time::Duration::from_millis(500));
         
-        println!("\nPréparez-vous au combat!");
+        print!("\r\nPréparez-vous au combat!\r\n");
         
         // Pause finale pour s'assurer que tout est lisible
         std::thread::sleep(std::time::Duration::from_secs(5));
@@ -165,6 +165,10 @@ impl Game {
         if self.state != GameState::Combat || self.current_monster_index.is_none() {
             return;
         }
+    
+        // Clear screen at the start of each combat turn
+        print!("\x1B[2J\x1B[1;1H");
+        std::io::Write::flush(&mut std::io::stdout()).unwrap();
     
         let monster_idx = self.current_monster_index.unwrap();
         let monster = &mut self.monsters[monster_idx];
@@ -176,17 +180,17 @@ impl Game {
 
     
         // Player's turn
-        println!("\n🗡️  Tour de {} !", self.player.name);
+        print!("\r\n🗡️  Tour de {} !\r\n", self.player.name);
         combat_pause();
     
         match player_action {
             PlayerCombatAction::Attack => {
                 let damage = self.player.attack(monster);
-                println!("➜ {} prépare son attaque...", self.player.name);
+                print!("➜ {} prépare son attaque...\r\n", self.player.name);
                 combat_pause();
                 
                 monster.receive_damage(damage);
-                println!("➜ {} frappe et inflige {} points de dégâts au {} !", 
+                print!("➜ {} frappe et inflige {} points de dégâts au {} !\r\n", 
                     self.player.name, 
                     damage,
                     match monster.species {
@@ -198,43 +202,43 @@ impl Game {
                 );
                 combat_pause();
                 
-                println!("PV restants du monstre: {}", monster.health);
+                print!("PV restants du monstre: {}\r\n", monster.health);
                 combat_pause();
             },
             PlayerCombatAction::SpecialAttack => {
                 if self.player.attaque_speciale {
-                    println!("➜ {} prépare une attaque spéciale...", self.player.name);
+                    print!("➜ {} prépare une attaque spéciale...\r\n", self.player.name);
                     combat_pause();
                     
                     let damage = self.player.use_special_attack(monster);
-                    println!("➜ {} déchaîne sa puissance et inflige {} points de dégâts !", 
+                    print!("➜ {} déchaîne sa puissance et inflige {} points de dégâts !\r\n", 
                         self.player.name, 
                         damage
                     );
                     combat_pause();
                     
-                    println!("PV restants du monstre: {}", monster.health);
+                    print!("PV restants du monstre: {}\r\n", monster.health);
                     combat_pause();
                 } else {
-                    println!("❌ Attaque spéciale non disponible!");
+                    print!("❌ Attaque spéciale non disponible!\r\n");
                     combat_pause();
                     return;
                 }
             },
             PlayerCombatAction::Drink => {
                 let old_hp = self.player.points_de_vie;
-                println!("➜ {} sort une potion...", self.player.name);
+                print!("➜ {} sort une potion...\r\n", self.player.name);
                 combat_pause();
                 
                 self.player.drink_potion();
                 if self.player.points_de_vie > old_hp {
-                    println!("➜ {} boit la potion et récupère {} points de vie!", 
+                    print!("➜ {} boit la potion et récupère {} points de vie!\r\n", 
                         self.player.name,
                         self.player.points_de_vie - old_hp
                     );
                     combat_pause();
                     
-                    println!("Nouveaux PV: {}", self.player.points_de_vie);
+                    print!("Nouveaux PV: {}\r\n", self.player.points_de_vie);
                     combat_pause();
                 }
             }
@@ -242,7 +246,7 @@ impl Game {
     
         // Monster's turn if still alive
         if monster.is_alive() {
-            println!("\n👾 Tour du monstre:");
+            print!("\r\n👾 Tour du monstre:\r\n");
             combat_pause();
             
             let mut rng = rand::thread_rng();
@@ -255,14 +259,14 @@ impl Game {
                 MonsterSpecies::Dragon => "Dragon",
             };
     
-            println!("➜ Le {} se prépare à attaquer...", monster_name);
+            print!("➜ Le {} se prépare à attaquer...\r\n", monster_name);
             combat_pause();
     
             let monster_damage = if monster_action < 2 && monster.special_attack_available {
                 monster.special_attack()
             } else {
                 let damage = monster.attack(self.player.defense);
-                println!("➜ Le {} attaque et inflige {} points de dégâts!", 
+                print!("➜ Le {} attaque et inflige {} points de dégâts!\r\n", 
                     monster_name,
                     damage
                 );
@@ -271,19 +275,19 @@ impl Game {
             combat_pause();
     
             self.player.receive_damage(monster_damage);
-            println!("PV restants de {}: {}", self.player.name, self.player.points_de_vie);
+            print!("PV restants de {}: {}\r\n", self.player.name, self.player.points_de_vie);
             combat_pause();
         }
     
         // Check combat end conditions
         if !monster.is_alive() {
-            println!("\n💫 Victoire!");
+            print!("\r\n💫 Victoire!\r\n");
             combat_pause();
-            println!("➜ +{} points d'expérience", monster.level * 10);
+            print!("➜ +{} points d'expérience\r\n", monster.level * 10);
             combat_pause();
             self.end_combat(monster_idx);
         } else if self.player.points_de_vie <= 0 {
-            println!("\n💀 Vous avez été vaincu!");
+            print!("\r\n💀 Vous avez été vaincu!\r\n");
             combat_pause();
             self.state = GameState::GameOver;
         }
@@ -293,7 +297,7 @@ impl Game {
     }
 
     fn end_combat(&mut self, monster_idx: usize) {
-        println!("Victoire! +{} points", self.monsters[monster_idx].level * 10);
+        print!("Victoire! +{} points\r\n", self.monsters[monster_idx].level * 10);
         self.score += self.monsters[monster_idx].level * 10;
         
         
@@ -306,12 +310,12 @@ impl Game {
     }
 
     pub fn display(&self) {
-        println!("Joueur: {} (Niveau {})", self.player.name, self.player.level);
-        println!("Score: {}", self.score);
+        print!("Joueur: {} (Niveau {})\r\n", self.player.name, self.player.level);
+        print!("Score: {}\r\n", self.score);
         
         if let Some(monster_idx) = self.current_monster_index {
             let monster = &self.monsters[monster_idx];
-            println!("\nCombat contre {} (Niveau {})", 
+            print!("\r\nCombat contre {} (Niveau {})\r\n", 
                 match monster.species {
                     MonsterSpecies::Goblin => "Gobelin",
                     MonsterSpecies::Orc => "Orc",
@@ -320,10 +324,10 @@ impl Game {
                 },
                 monster.level
             );
-            println!();
-            println!("Monstre -> Points de vie {}/{}", monster.health, monster.max_health);
-            println!("{} -> Points de vie {}/{}", self.player.name, self.player.points_de_vie, self.player.max_health);
-            println!();
+            print!("\r\n");
+            print!("Monstre -> Points de vie {}/{}\r\n", monster.health, monster.max_health);
+            print!("{} -> Points de vie {}/{}\r\n", self.player.name, self.player.points_de_vie, self.player.max_health);
+            print!("\r\n");
             
         }
         
@@ -332,33 +336,33 @@ impl Game {
     }
 
     pub fn show_inventory(&mut self) {
-        println!("Inventaire de {}", self.player.name);
-        println!("Points de vie: {}/{}", self.player.points_de_vie, self.player.max_health);
-        println!("Potions: {}", self.player.potions);
-        println!("Espèce: {}", match self.player.espece {
+        print!("Inventaire de {}\r\n", self.player.name);
+        print!("Points de vie: {}/{}\r\n", self.player.points_de_vie, self.player.max_health);
+        print!("Potions: {}\r\n", self.player.potions);
+        print!("Espèce: {}\r\n", match self.player.espece {
             Espece::Homme => "Hommme",
             Espece::Sorciere => "Sorcière",
             Espece::Elfe => "Elfe",
             Espece::Chevalier => "Chevalier",
         });
-        println!("Attaque: {}", self.player.attack);
-        println!("Défense: {}", self.player.defense);
+        print!("Attaque: {}\r\n", self.player.attack);
+        print!("Défense: {}\r\n", self.player.defense);
     }
 
     pub fn show_help(&mut self) {
-        println!("En mode normal:");
-        println!("z/flèche haut: Monter");
-        println!("s/flèche bas: Descendre");
-        println!("q/flèche gauche: Aller à gauche");
-        println!("d/flèche droite: Aller à droite");
-        println!("i: Afficher l'inventaire");
-        println!("h: Afficher l'aide");
-        println!("x: Quitter le jeu");
+        print!("En mode normal:\r\n");
+        print!("z/flèche haut: Monter\r\n");
+        print!("s/flèche bas: Descendre\r\n");
+        print!("q/flèche gauche: Aller à gauche\r\n");
+        print!("d/flèche droite: Aller à droite\r\n");
+        print!("i: Afficher l'inventaire\r\n");
+        print!("h: Afficher l'aide\r\n");
+        print!("x: Quitter le jeu\r\n");
         
-        println!("\nEn mode combat:");
-        println!("a: Attaque simple");
-        println!("s: Attaque spéciale");
-        println!("p: Boire une potion");
+        print!("\r\nEn mode combat:\r\n");
+        print!("a: Attaque simple\r\n");
+        print!("s: Attaque spéciale\r\n");
+        print!("p: Boire une potion\r\n");
     }
     // generate a new map if the player is on a door tile 
 
@@ -367,16 +371,17 @@ impl Game {
         self.player.level_up();
         
         // Clear screen
-        print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+        print!("\x1B[2J\x1B[1;1H");
+        std::io::Write::flush(&mut std::io::stdout()).unwrap();
         
         // Display level up message with benefits
-        println!("\n🆙 PASSAGE AU NIVEAU {} 🆙", self.player.level);
-        println!(" ");
-        println!("• Points de vie max augmentés");
-        println!("• Attaque améliorée");
-        println!("• Défense renforcée");
-        println!("• Attaque spéciale réinitialisée");
-        println!("• Une nouvelle potion ajoutée");
+        print!("\r\n🆙 PASSAGE AU NIVEAU {} 🆙\r\n", self.player.level);
+        print!(" \r\n");
+        print!("• Points de vie max augmentés\r\n");
+        print!("• Attaque améliorée\r\n");
+        print!("• Défense renforcée\r\n");
+        print!("• Attaque spéciale réinitialisée\r\n");
+        print!("• Une nouvelle potion ajoutée\r\n");
         
         // Pause to let the player read the message
         std::thread::sleep(std::time::Duration::from_secs(3));
