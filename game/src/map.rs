@@ -14,7 +14,6 @@ impl Map {
             height,
             tiles: vec![vec!['⬛'; width]; height],
         };
-        // add a door to the map the bottom right corner
         map.tiles[map.height - 1][map.width - 1] = '🚪';
         map.generate_walls_and_icons();
         map
@@ -23,11 +22,11 @@ impl Map {
     fn generate_walls_and_icons(&mut self) {
         let mut rng = rand::thread_rng();
         
-        // Number of heart and flame icons to generate
+       
         let num_hearts = rng.gen_range(1..4);
         let num_flames = rng.gen_range(1..4);
 
-        // Generate walls
+        
         for _ in 0..self.width {
             let x = rng.gen_range(0..self.width);
             let y = rng.gen_range(0..self.height);
@@ -38,7 +37,7 @@ impl Map {
             }
         }
 
-        // Place heart icons (heal 10 HP)
+        
         for _ in 0..num_hearts {
             loop {
                 let x = rng.gen_range(0..self.width);
@@ -50,7 +49,7 @@ impl Map {
             }
         }
 
-        // Place flame icons (damage 50 HP)
+      
         for _ in 0..num_flames {
             loop {
                 let x = rng.gen_range(0..self.width);
@@ -64,11 +63,10 @@ impl Map {
     }
 
     pub fn display(&self) {
+        
         for row in &self.tiles {
-            for tile in row {
-                print!("{} ", tile);
-            }
-            println!();
+            let row_string: String = row.iter().map(|&tile| tile.to_string() + " ").collect();
+            println!("{}", row_string.trim());
         }
     }
 
@@ -77,7 +75,7 @@ impl Map {
     }
 
     pub fn place_player(&mut self, x: usize, y: usize, player: &Player) {
-        // choisir le bon caractère pour le joueur
+        
         if player.espece == Espece::Homme {
             self.tiles[y][x] = '🧑';
         } else if player.espece == Espece::Sorciere {
@@ -108,7 +106,7 @@ impl Map {
         }
     }
 
-    // check if the player is on a door
+    
     pub fn is_on_door(&self, x: usize, y: usize) -> bool {
         // Vérifier que les coordonnées sont dans la carte
         x < self.width && y < self.height && 

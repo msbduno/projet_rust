@@ -9,5 +9,3 @@ Le projet est organisé en modules Rust, chacun ayant une responsabilité spéci
 - map.rs : Gestion de la carte et des tuiles
 - player.rs : Définition et comportement du joueur
 - monster.rs : Définition et comportement des monstres
-
-

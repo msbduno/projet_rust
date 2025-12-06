@@ -20,7 +20,7 @@ fn select_character() -> (String, Espece) {
    
     let mut input = String::new();
 
-    // Get player name
+
     println!("Bienvenue dans le Mini-RPG!");
     println!("Entrez votre nom:");
     std::io::stdin().read_line(&mut input).unwrap();
@@ -28,11 +28,6 @@ fn select_character() -> (String, Espece) {
 
     // Clear terminal for character selection
     print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
-    
-    // Display character selection menu
-    // add smybol for each character
-
-
 
 
     println!("Choisissez votre perso:");
@@ -55,7 +50,7 @@ fn select_character() -> (String, Espece) {
     println!("   Equilibre entre attaque et défense");
     println!("   PV: 150, Attaque: 16, Défense: 12");
     
-    // Get character choice
+
     loop {
         input.clear();
         println!("\nEntrez votre choix (1-4):");
@@ -88,7 +83,7 @@ fn main() -> crossterm::Result<()> {
 
     print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
     
-    // Get player name and character choice
+   
     let (name, espece) = select_character();
 
     {
